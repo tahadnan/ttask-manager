@@ -48,9 +48,9 @@ print(tm.current_state('done'))
 This project was primarily created as a learning exercise in Python package development. Its simplicity is intentional, and there are no plans for significant feature additions or expansions. However, if you find a bug or have a suggestion for a minor improvement, feel free to open an issue on the GitHub repository.
 ## Links
 
-- Project homepage: https://github.com/tahadnan/task_manager
-- Repository: https://github.com/tahadnan/task_manager
-- Issue tracker: https://github.com/tahadnan/task_manager/issues
+- Project homepage: https://github.com/tahadnan/ttask_manager
+- Repository: https://github.com/tahadnan/ttask_manager
+- Issue tracker: https://github.com/tahadnan/ttask_manager/issues
   - In case of sensitive bugs like security vulnerabilities, please contact
     tahacodes.101@gmail.com directly instead of using the issue tracker. We value your effort
     to improve the security and privacy of this project!
