@@ -21,7 +21,7 @@ This release introduces a new feature that allows the TaskManager to save and lo
 Here's a quick example of how to use the TaskManager:
 
 ```python
-from task_manager_tahadnan import TaskManager
+from ttask_manager.ttask_manager import TaskManager
 
 # Create a new TaskManager instance
 tm = TaskManager()
