@@ -1,3 +1,4 @@
+import json
 class TaskManager():
     """
     TaskManager manages tasks that need to be done and tasks that are already completed.
@@ -12,10 +13,56 @@ class TaskManager():
         A list of tasks that have been completed.
         This list tracks tasks that the user has already marked as done.
     """
-    def __init__(self) -> None:
+    def __init__(self) -> None: 
         self.to_do = []
         self.done = []
-    def add_task(self,*tasks: str) -> str:
+        self.data = {
+            'to_do' : self.to_do,
+            'done' : self.done
+        }
+        
+    def save_current_state(self) -> str:        
+        """
+        Saves the current state of the task manager to a JSON file.
+
+        Returns:
+            A message indicating whether the data was written successfully.
+        """
+        with open('data.json', 'w') as data_safe:
+            json.dump(self.data, data_safe, indent=2)
+        return "Data written succesfully."
+    
+    def load_recent_state(self) -> str:
+        """
+        Loads the recent state of the task manager from a JSON file.
+
+        Returns:
+            A message indicating whether the data was loaded successfully.
+        """
+        try:
+            with open('data.json') as data_safe:
+                data = json.load(data_safe)
+            self.to_do = data.get('to_do', [])
+            self.done = data.get('done', [])
+            return "Data loaded succesfully, ready to go!"
+        except FileNotFoundError:
+            self.to_do = []
+            self.done = []   
+            self.data = {
+            'to_do' : self.to_do,
+            'done' : self.done
+            }
+            print('No saved data found starting fresh.')  
+        except JSONDecodeError as e:
+            print(f"Error parsing JSON: {e}")
+            self.to_do = []
+            self.done = []
+            self.data = {
+            'to_do' : self.to_do,
+            'done' : self.done
+            }
+            return "Error loading data. Starting fresh."          
+    def add_task(self,*tasks: str) -> str:  
         """
         Adds one or more tasks to the to-do list.
 
