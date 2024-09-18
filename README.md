@@ -12,6 +12,10 @@ The TaskManager package provides functionality to:
 - Remove tasks from the list
 - View current tasks and completed tasks
 
+##What's new with the 0.1.0:
+
+This release introduces a new feature that allows the TaskManager to save and load its state to/from a JSON file. This means that users can now persist their task lists across sessions, making it easier to manage their tasks. Additionally, the code has been refactored to improve readability and maintainability.
+
 ## Usage
 
 Here's a quick example of how to use the TaskManager:
