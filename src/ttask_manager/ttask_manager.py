@@ -1,24 +1,37 @@
 import json
+from json import JSONDecodeError
+from datetime import date
+from typing import List, Dict, Union
 class TaskManager():
     """
-    TaskManager manages tasks that need to be done and tasks that are already completed.
-
-    Attributes:
-    ----------
-    to_do : list
-        A list of tasks that are yet to be completed.
-        This list tracks the current tasks that the user needs to work on.
-
-    done : list
-        A list of tasks that have been completed.
-        This list tracks tasks that the user has already marked as done.
+    A class to manage tasks, providing functionality for adding, removing, and marking tasks
+    as done, as well as saving/loading tasks to/from a JSON file and generating reports.
     """
     def __init__(self) -> None: 
-        self.to_do = []
-        self.done = []
-        self.data = {
+        """
+        Initializes a new instance of the TaskManager class.
+
+        Attributes:
+        to_do : list
+            A list of tasks that are yet to be completed.
+        done : list
+            A list of tasks that have been completed.
+        daily_added_tasks : list
+            A list of tasks that were added to the to-do list for the current day, used for reporting.
+        daily_completed_tasks : list
+            A list of tasks that were completed during the current day, used for reporting.
+        data : dict
+            A dictionary to store the current state of tasks, including to-do and done lists.
+        """
+        self.daily_added_tasks: List[str] = []
+        self.daily_completed_tasks: List[str] = []
+        self.to_do: List[str] = []
+        self.done: List[str] = []
+        self.data: Dict[str, List[str]] = {
             'to_do' : self.to_do,
-            'done' : self.done
+            'done' : self.done,
+            'daily added tasks':self.daily_added_tasks,
+            'daily completed tasks':self.daily_completed_tasks
         }
         
     def save_current_state(self) -> str:        
@@ -26,7 +39,7 @@ class TaskManager():
         Saves the current state of the task manager to a JSON file.
 
         Returns:
-            A message indicating whether the data was written successfully.
+            str: A message indicating whether the data was written successfully.
         """
         with open('data.json', 'w') as data_safe:
             json.dump(self.data, data_safe, indent=2)
@@ -34,53 +47,56 @@ class TaskManager():
     
     def load_recent_state(self) -> str:
         """
-        Loads the recent state of the task manager from a JSON file.
+        Loads the most recent task manager state from a JSON file, updating the to-do,
+        done, and reporting lists.
 
         Returns:
-            A message indicating whether the data was loaded successfully.
+            str: A message confirming the data was loaded successfully, or an error message if no data is found.
         """
         try:
             with open('data.json') as data_safe:
                 data = json.load(data_safe)
             self.to_do = data.get('to_do', [])
             self.done = data.get('done', [])
+            self.daily_added_tasks = data.get('daily added tasks', [])
+            self.daily_completed_tasks = data.get('daily completed tasks', [])
+
             return "Data loaded succesfully, ready to go!"
         except FileNotFoundError:
-            self.to_do = []
-            self.done = []   
-            self.data = {
-            'to_do' : self.to_do,
-            'done' : self.done
-            }
-            print('No saved data found starting fresh.')  
+            self.reset()
+            return 'No saved data found starting fresh.'  
         except JSONDecodeError as e:
             print(f"Error parsing JSON: {e}")
-            self.to_do = []
-            self.done = []
-            self.data = {
-            'to_do' : self.to_do,
-            'done' : self.done
-            }
-            return "Error loading data. Starting fresh."          
+            self.reset()
+            return "Error loading data. Starting fresh."       
+
     def add_task(self,*tasks: str) -> str:  
         """
-        Adds one or more tasks to the to-do list.
+        Adds one or more tasks to the to-do list if they are not already present.
 
         Args:
-            *tasks: One or more tasks to add to the to-do list.
+            *tasks: The tasks to be added to the to-do list.
 
         Returns:
-            A message indicating whether the tasks were added successfully.
+            str: A message indicating which tasks were added or already exist in the list.
         """
-        added_tasks = []
+        added_tasks: List[str] = []
+        existing_tasks = {task.lower() for task in self.to_do}
+        not_added: List[str] = []
         for task in tasks:
-            if task.lower() not in [content.lower() for content in self.to_do]:
+            if task.lower() not in existing_tasks:
                 self.to_do.append(task)
+                self.daily_added_tasks.append(task)
                 added_tasks.append(task)
+                existing_tasks.add(task.lower())
+            else:
+                not_added.append(task)
+        response = []
         if added_tasks:
-            return f"{', '.join(added_tasks)} added successfully. "
-        else:
-            return f"{task} already in the to-do list:\n {self.to_do}"
+            response.append(f"{', '.join(added_tasks)} added successfully.")
+        if not_added:
+            response.append(f"{', '.join(not_added)} already in the to-do list:\n {self.to_do}")
+        return " ".join(response)
     def remove_task(self,*tasks: str) -> str:
         """
         Removes one or more tasks from the to-do list.
@@ -97,6 +113,7 @@ class TaskManager():
         for task in tasks:
             if task in self.to_do:
                 self.to_do.remove(task)
+                self.daily_added_tasks.remove(task)
                 removed_tasks.append(task)
             else:
                 not_found_tasks.append(task)
@@ -107,32 +124,50 @@ class TaskManager():
             return f"{', '.join(removed_tasks)} removed successfully."
         elif not_found_tasks:
             return f"{', '.join(not_found_tasks)} not found in the to-do list."
+
     def task_done(self, *tasks: str) -> str:
         """
-        Marks one or more tasks as done.
+        Marks one or more tasks as done by moving them from the to-do list to the done list.
 
         Args:
-            *tasks: One or more tasks to mark as done.
+            *tasks: The tasks to be marked as done.
 
         Returns:
-            A message indicating whether the tasks were marked as done successfully.
+            str: A message indicating which tasks were successfully marked as done or already completed.
         """
         done_tasks = []
+        already_done_tasks = []
+        absent_task = []
         for task in tasks:
-            if task in self.to_do and task not in self.done:
+            if task.lower() in {t.lower() for t in self.done}:
                 self.done.append(task)
+                self.daily_completed_tasks.append(task)
                 self.to_do.remove(task)
                 done_tasks.append(task)
-            elif task in self.done:
-                return "Already done."
-            elif task not in self.to_do:
-                return f"{task} not in the to-do list."
-
+            elif task.lower() in {t.lower() for t in self.done}:
+                already_done_tasks.append(task)
+            else:
+                absent_task.append(task)
+        response = []
         if done_tasks:
-            return f"{', '.join(done_tasks)} marked as done."
-        else:
-            return "No tasks were marked as done."
-    def _format_task_list(self, tasks, list_type):
+            response.append(f"{', '.join(done_tasks)} marked as done.")
+        elif already_done_tasks:
+            response.append(f"{', '.join(already_done_tasks)} already done.")
+        elif absent_task:
+            response.append(f"{', '.join(absent_task)} not in to-do list.")
+        return " ".join(response)
+
+    def _format_task_list(self, tasks: List[str], list_type: str) -> str :
+        """
+        Formats a list of tasks for display, numbering them and indicating the type (to-do or done).
+
+        Args:
+            tasks (List[str]): The tasks to be formatted.
+            list_type (str): The type of tasks (e.g., 'to-do' or 'done') for display purposes.
+
+        Returns:
+            str: A formatted string representation of the tasks.
+        """
         if not tasks:
             return f"No {list_type} tasks."
     
@@ -141,61 +176,97 @@ class TaskManager():
             formatted_list += f"{idx}. {task}\n"
         return formatted_list.strip()
 
-    def current_state(self,option: str = 'both') -> str:
+    def report(self, file_name=f"{date.today()}_tasks.txt") :
         """
-        Returns the current state of the task manager.
+        Generates and saves a report of the day's to-do and completed tasks to a text file.
 
         Args:
-            option: The option to specify the type of state to return. Can be 'to-do', 'done', or 'both'.
+            file_name (str, optional): The name of the file where the report will be saved.
+            Defaults to a file named with the current date.
 
         Returns:
-            A string representing the current state of the task manager.
+            str: A message confirming the report was saved or if both task lists are empty.
+        """
+        if not self.daily_added_tasks and not self.daily_completed_tasks:
+            return "Both lists are empty, are you willing to save nothing? Do somrthing, you Panda."
+        else:
+            todo_final = self._format_task_list(self.daily_added_tasks, 'To-Do')
+            done_final = self._format_task_list(self.daily_completed_tasks, 'Done')
+            report = f'''
+            {date.today()} Tasks were:
+
+            Your to-do tasks were:
+
+            {todo_final}
+
+            Your done tasks were:
+
+            {done_final}
+            '''.lstrip()
+            with open(file_name, 'w') as report_file:
+                report_file.write(report)
+            return f"Report wrote succesfuly. And saved at the current directory with the following name:{file_name}"
+
+    def current_state(self,option: str = 'both') -> str:
+        """
+        Displays the current state of the task manager, showing either the to-do, done, or both lists.
+
+        Args:
+            option (str, optional): The task list(s) to display ('to-do', 'done', or 'both'). Defaults to 'both'.
+
+        Returns:
+            str: A formatted string representing the requested task list(s).
         """
         if option == 'both':
-            to_do_list = self._format_task_list(self.to_do, "to-do")
-            done_list = self._format_task_list(self.done, "done")
-            return f"{to_do_list}\n\n{done_list}"
+            return f"{self._format_task_list(self.to_do, "to-do")}\n\n{self._format_task_list(self.done, "done")}"
         elif option == 'to-do':
             return self._format_task_list(self.to_do, "to-do")
         elif option == 'done':
             return self._format_task_list(self.done, "done")
         else:
             return "Invalid option."
+
     def clear_todo_list(self) -> str:
         """
         Clears the to-do list.
 
         Returns:
-            A message indicating whether the to-do list was cleared successfully.
+            str: A message indicating whether the to-do list was cleared successfully.
         """
-        if self.to_do == []:
+        if not self.to_do :
             return "It's already empty."
         else:
             self.to_do.clear()
+            self.daily_added_tasks.clear()
             return "To-Do list cleared."
+
     def clear_done_list(self) -> str:
         """
         Clears the done list.
 
         Returns:
-            A message indicating whether the done list was cleared successfully.
+            str: A message indicating whether the done list was cleared successfully.
         """
-        if self.to_do == []:
+        if not self.done :
             return "It's already empty."
         else:
             self.done.clear()
+            self.daily_completed_tasks.clear()
             return "Done list cleared."
+
     def reset(self) -> str:
         """
         Resets both lists.
 
         Returns:
-            A message indicating whether both lists were reset successfully.
+            str: A message indicating whether both lists were reset successfully.
         """
         if self.to_do or self.done:
             self.to_do.clear()
             self.done.clear()
+            self.daily_completed_tasks.clear()
+            self.daily_added_tasks.clear()
             return "Both lists reseted and cleaned."
         else:
-            return "The lists are already empty"
+            return "The lists are already empty."
 

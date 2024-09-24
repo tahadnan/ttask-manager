@@ -12,13 +12,13 @@ The TaskManager package provides functionality to:
 - Remove tasks from the list
 - View current tasks and completed tasks
 
-## What's new with the 0.1.1:
+### What's New in 0.2.0 Release
 
-This release introduces a new feature that allows the TaskManager to save and load its state to/from a JSON file. This means that users can now persist their task lists across sessions, making it easier to manage their tasks. Additionally, the code has been refactored to improve readability and maintainability.
+The 0.2.0 release introduces several key features and improvements to enhance task management and tracking. This version adds **daily task tracking**, with new lists for daily added and completed tasks, allowing users to generate daily progress reports. The addition of the `report` method enables saving task activity in a text file, named after the current date. Task addition and removal are optimized for better performance and clearer feedback. Error handling during data loading is improved, with automatic resets on failure. Additionally, task formatting and list resetting have been streamlined for a cleaner and more efficient user experience.
 
 ## Usage
 
-Here's a quick example of how to use the TaskManager:
+Here's a quick example of how to use the TaskManager effectively:
 
 ```python
 from ttask_manager.ttask_manager import TaskManager
@@ -26,18 +26,32 @@ from ttask_manager.ttask_manager import TaskManager
 # Create a new TaskManager instance
 tm = TaskManager()
 
-# Add some tasks
-tm.add_task("Write README", "Create setup.py", "Push to GitHub")
+# Load existing tasks (if any)
+tm.load_recent_state()
 
-# View current tasks
+# Add multiple tasks to the to-do list
+tm.add_task("Write README", "Create setup.py", "Push to GitHub", "Test the application")
+
+# View current to-do tasks
 print(tm.current_state('to-do'))
 
-# Mark a task as done
-tm.task_done("Write README")
+# Mark specific tasks as done
+tm.task_done("Write README", "Test the application")
 
 # View completed tasks
 print(tm.current_state('done'))
+
+# Generate a report of today's tasks
+print(tm.report())
+
+# Clear the to-do list after completing tasks
+tm.clear_todo_list()
+
+# Reset both lists if needed
+tm.reset()
 ```
+
+This example showcases how to create a TaskManager instance, load existing tasks, manage to-do and completed tasks, generate a daily report, and reset the lists as needed.
 
 ## Features
 
@@ -50,6 +64,10 @@ print(tm.current_state('done'))
 
 ## Development
 This project was primarily created as a learning exercise in Python package development. Its simplicity is intentional, and there are no plans for significant feature additions or expansions. However, if you find a bug or have a suggestion for a minor improvement, feel free to open an issue on the GitHub repository.
+
+## Notice
+
+Due to the pressure of my studies, I will be taking a pause from further development on the TaskManager. Thank you for your understanding and support during this time.
 
 ## Licensing
 
