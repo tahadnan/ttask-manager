@@ -12,9 +12,12 @@ The TaskManager package provides functionality to:
 - Remove tasks from the list
 - View current tasks and completed tasks
 
-### What's New in 0.2.1 Release
+## What's New in 0.2.2 Release
 
-The 0.2.1 release introduces several key features and improvements to enhance task management and tracking. This version adds daily task tracking, the report method enables saving task activity in a text file allowing users to generate daily progress reports, and optimizes task addition and removal for better performance and clearer feedback. Error handling during data loading is improved, with automatic resets on failure, and task formatting and list resetting have been streamlined for a cleaner and more efficient user experience.
+In this release, we fixed a bug related to how the `save_current_state` method saves the `data.json` file. Previously, the file was saved in the directory where the script was **executed** from, which could lead to unexpected file locations. Now, the `data.json` file is saved in the directory where the script being **executed** is located, ensuring data is stored in the same directory as the executing script.
+
+Additionally, the `load_recent_state` method has been updated to load the `data.json` file from the same directory where the executed script is located, ensuring consistency between saving and loading operations.
+
 
 ## Usage
 

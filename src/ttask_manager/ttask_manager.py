@@ -57,7 +57,9 @@ class TaskManager():
             str: A message confirming the data was loaded successfully, or an error message if no data is found.
         """
         try:
-            with open('data.json') as data_safe:
+            current_working_dir = os.getcwd()
+            file_path = os.path.join(current_working_dir, 'data.json')
+            with open(file_path, 'r') as data_safe:
                 data = json.load(data_safe)
             self.to_do = data.get('to_do', [])
             self.done = data.get('done', [])
