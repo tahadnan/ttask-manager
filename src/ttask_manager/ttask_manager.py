@@ -2,6 +2,7 @@ import json
 from json import JSONDecodeError
 from datetime import date
 from typing import List, Dict, Union, Optional
+import os
 class TaskManager():
     """
     A class to manage tasks, providing functionality for adding, removing, and marking tasks
@@ -41,9 +42,11 @@ class TaskManager():
         Returns:
             str: A message indicating whether the data was written successfully.
         """
-        with open('data.json', 'w') as data_safe:
+        current_working_dir = os.getcwd()
+        data_file_path = os.path.join(current_working_dir, 'data.json')
+        with open(data_file_path, 'w') as data_safe:
             json.dump(self.data, data_safe, indent=2)
-        return "Data written succesfully."
+        return f"Data written succesfully at {data_file_path}."
     
     def load_recent_state(self) -> str:
         """
