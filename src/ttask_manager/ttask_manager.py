@@ -1,7 +1,7 @@
 import json
 from json import JSONDecodeError
 from datetime import date
-from typing import List, Dict, Union
+from typing import List, Dict, Union, Optional
 class TaskManager():
     """
     A class to manage tasks, providing functionality for adding, removing, and marking tasks
@@ -81,14 +81,12 @@ class TaskManager():
             str: A message indicating which tasks were added or already exist in the list.
         """
         added_tasks: List[str] = []
-        existing_tasks = {task.lower() for task in self.to_do}
         not_added: List[str] = []
         for task in tasks:
-            if task.lower() not in existing_tasks:
-                self.to_do.append(task)
-                self.daily_added_tasks.append(task)
+            if task.lower() not in self.to_do:
+                self.to_do.append(task.lower())
+                self.daily_added_tasks.append(task.lower())
                 added_tasks.append(task)
-                existing_tasks.add(task.lower())
             else:
                 not_added.append(task)
         response = []
@@ -111,9 +109,9 @@ class TaskManager():
         not_found_tasks = []
 
         for task in tasks:
-            if task in self.to_do:
-                self.to_do.remove(task)
-                self.daily_added_tasks.remove(task)
+            if task.lower() in self.to_do:
+                self.to_do.remove(task.lower())
+                self.daily_added_tasks.remove(task.lower())
                 removed_tasks.append(task)
             else:
                 not_found_tasks.append(task)
@@ -139,21 +137,21 @@ class TaskManager():
         already_done_tasks = []
         absent_task = []
         for task in tasks:
-            if task.lower() in {t.lower() for t in self.done}:
-                self.done.append(task)
-                self.daily_completed_tasks.append(task)
-                self.to_do.remove(task)
+            if task.lower() not in self.done and task.lower() in self.to_do:
+                self.done.append(task.lower())
+                self.daily_completed_tasks.append(task.lower())
+                self.to_do.remove(task.lower())
                 done_tasks.append(task)
-            elif task.lower() in {t.lower() for t in self.done}:
+            elif task.lower() in self.done:
                 already_done_tasks.append(task)
-            else:
+            else            :
                 absent_task.append(task)
         response = []
         if done_tasks:
             response.append(f"{', '.join(done_tasks)} marked as done.")
-        elif already_done_tasks:
+        if already_done_tasks:
             response.append(f"{', '.join(already_done_tasks)} already done.")
-        elif absent_task:
+        if absent_task:
             response.append(f"{', '.join(absent_task)} not in to-do list.")
         return " ".join(response)
 
@@ -173,10 +171,10 @@ class TaskManager():
     
         formatted_list = f"{list_type.capitalize()} Tasks:\n"
         for idx, task in enumerate(tasks, 1):
-            formatted_list += f"{idx}. {task}\n"
+            formatted_list += f"{idx}. {task.capitalize()}\n"
         return formatted_list.strip()
 
-    def report(self, file_name=f"{date.today()}_tasks.txt") :
+    def report(self, file_name : Optional[str]=f"{date.today()}_tasks.txt") :
         """
         Generates and saves a report of the day's to-do and completed tasks to a text file.
 
@@ -192,23 +190,18 @@ class TaskManager():
         else:
             todo_final = self._format_task_list(self.daily_added_tasks, 'To-Do')
             done_final = self._format_task_list(self.daily_completed_tasks, 'Done')
-            report = f'''
-            {date.today()} Tasks were:
+            report = f'''{date.today()} Tasks were:
 
-            Your to-do tasks were:
+{todo_final}
 
-            {todo_final}
-
-            Your done tasks were:
-
-            {done_final}
-            '''.lstrip()
+{done_final}
+            '''
             with open(file_name, 'w') as report_file:
                 report_file.write(report)
             return f"Report wrote succesfuly. And saved at the current directory with the following name:{file_name}"
 
     def current_state(self,option: str = 'both') -> str:
-        """
+        """ 
         Displays the current state of the task manager, showing either the to-do, done, or both lists.
 
         Args:
@@ -218,11 +211,11 @@ class TaskManager():
             str: A formatted string representing the requested task list(s).
         """
         if option == 'both':
-            return f"{self._format_task_list(self.to_do, "to-do")}\n\n{self._format_task_list(self.done, "done")}"
+            return f"{self._format_task_list(self.to_do, 'to-do')}\n\n{self._format_task_list(self.done, 'done')}"
         elif option == 'to-do':
-            return self._format_task_list(self.to_do, "to-do")
+            return self._format_task_list(self.to_do, 'to-do')
         elif option == 'done':
-            return self._format_task_list(self.done, "done")
+            return self._format_task_list(self.done, ('done'))
         else:
             return "Invalid option."
 

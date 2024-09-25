@@ -12,9 +12,9 @@ The TaskManager package provides functionality to:
 - Remove tasks from the list
 - View current tasks and completed tasks
 
-### What's New in 0.2.0 Release
+### What's New in 0.2.1 Release
 
-The 0.2.0 release introduces several key features and improvements to enhance task management and tracking. This version adds **daily task tracking**, with new lists for daily added and completed tasks, allowing users to generate daily progress reports. The addition of the `report` method enables saving task activity in a text file, named after the current date. Task addition and removal are optimized for better performance and clearer feedback. Error handling during data loading is improved, with automatic resets on failure. Additionally, task formatting and list resetting have been streamlined for a cleaner and more efficient user experience.
+The 0.2.1 release introduces several key features and improvements to enhance task management and tracking. This version adds daily task tracking, the report method enables saving task activity in a text file allowing users to generate daily progress reports, and optimizes task addition and removal for better performance and clearer feedback. Error handling during data loading is improved, with automatic resets on failure, and task formatting and list resetting have been streamlined for a cleaner and more efficient user experience.
 
 ## Usage
 
