@@ -37,10 +37,15 @@ class TaskManager():
         
     def save_current_state(self) -> str:        
         """
-        Saves the current state of the task manager to a JSON file.
+        Save the current state of the task manager to a JSON file.
+
+        This method serializes the current state of the task manager, including tasks in the 
+        to-do, done, and reporting lists, and saves it to a local JSON file. The file will be 
+        saved in the directory where the script is saved.
 
         Returns:
-            str: A message indicating whether the data was written successfully.
+            str: A success message indicating the file path where the data was written, 
+            or an error message if the operation fails.
         """
         pyfile_path = os.path.dirname(os.path.realpath(__file__))
         data_file_path = os.path.join(pyfile_path, 'data.json')
@@ -50,11 +55,16 @@ class TaskManager():
     
     def load_recent_state(self) -> str:
         """
-        Loads the most recent task manager state from a JSON file, updating the to-do,
-        done, and reporting lists.
+        Load the most recent task manager state from a JSON file.
+
+        This method retrieves the previously saved state from a JSON file, updating the to-do, 
+        done, and reporting lists in the task manager. The file will be loaded from the 
+        directory where the script is saved. If the file does not exist or contains invalid 
+        data, it resets the state and starts fresh.
 
         Returns:
-            str: A message confirming the data was loaded successfully, or an error message if no data is found.
+            str: A message indicating successful data loading, or an error message if no 
+            data is found or if there is an issue with the file.
         """
         try:
             pyfile_path = os.path.dirname(os.path.realpath(__file__))
