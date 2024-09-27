@@ -192,7 +192,7 @@ class TaskManager():
             formatted_list += f"{idx}. {task.capitalize()}\n"
         return formatted_list.strip()
 
-    def report(self, file_name : Optional[str]=f"{date.today()}_tasks.txt") :
+    def report(self,file_path=None, report_name : Optional[str]=f"{date.today()}_tasks.txt") :
         """
         Generates and saves a report of the day's to-do and completed tasks to a text file.
 
@@ -212,8 +212,9 @@ class TaskManager():
 
 {todo_final}
 
-{done_final}
+{done_final}        
             '''
+            file_name = os.path.join(file_path, report_name)
             with open(file_name, 'w') as report_file:
                 report_file.write(report)
             return f"Report wrote succesfuly. And saved at the current directory with the following name:{file_name}"
