@@ -12,9 +12,9 @@ The TaskManager package provides functionality to:
 - Remove tasks from the list
 - View current tasks and completed tasks
 
-## What's New in 0.2.3 Release:
+## What's New in 0.2.2 Release
 
-Fixed a bug with the ```save_current_state``` and ```load_recent_state``` methods , where the bug was that the ```data.json``` file was still being saved in the currently running from directory but now it's being saved at the same directory as the main python file.
+In this release, we fixed a bug related to how the `save_current_state` method saves the `data.json` file. Previously, the file was saved in the directory where the script was **executed** from, which could lead to unexpected file locations. Now, the `data.json` file is saved in the directory where the script being **executed** is located, ensuring data is stored in the same directory as the executing script.
 
 Additionally, the `load_recent_state` method has been updated to load the `data.json` file from the same directory where the executed script is located, ensuring consistency between saving and loading operations.
 
