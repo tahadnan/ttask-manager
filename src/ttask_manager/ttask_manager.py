@@ -42,8 +42,8 @@ class TaskManager():
         Returns:
             str: A message indicating whether the data was written successfully.
         """
-        current_working_dir = os.getcwd()
-        data_file_path = os.path.join(current_working_dir, 'data.json')
+        pyfile_path = os.path.dirname(os.path.realpath(__file__))
+        data_file_path = os.path.join(pyfile_path, 'data.json')
         with open(data_file_path, 'w') as data_safe:
             json.dump(self.data, data_safe, indent=2)
         return f"Data written succesfully at {data_file_path}."
@@ -57,9 +57,9 @@ class TaskManager():
             str: A message confirming the data was loaded successfully, or an error message if no data is found.
         """
         try:
-            current_working_dir = os.getcwd()
-            file_path = os.path.join(current_working_dir, 'data.json')
-            with open(file_path, 'r') as data_safe:
+            pyfile_path = os.path.dirname(os.path.realpath(__file__))
+            data_file_path = os.path.join(pyfile_path, 'data.json')
+            with open(data_file_path, 'r') as data_safe:
                 data = json.load(data_safe)
             self.to_do = data.get('to_do', [])
             self.done = data.get('done', [])
