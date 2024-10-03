@@ -12,11 +12,6 @@ The TaskManager package provides functionality to:
 - Remove tasks from the list
 - View current tasks and completed tasks
 
-## What's New in 0.2.6 Release:
-
-- Added `file_path` parameter to the `report` method, allowing users to specify where to save the report.
-- Improved error handling and messaging in the `report` method.
-
 ## Usage
 
 Here's a quick example of how to use the TaskManager effectively:

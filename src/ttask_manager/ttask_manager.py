@@ -33,9 +33,8 @@ class TaskManager():
             'done' : self.done,
             'daily added tasks':self.daily_added_tasks,
             'daily completed tasks':self.daily_completed_tasks
-        }
-        
-    def save_current_state(self,data_file_path=None) -> str:        
+        }   
+    def save_current_state(self,data_file_path: str =   None) -> str:        
         """
         Save the current state of the task manager to a JSON file.
 
@@ -48,11 +47,11 @@ class TaskManager():
             or an error message if the operation fails.
         """
         if not data_file_path:
-            return f"{data_file_path} is invalid as a data file path to save to."
+            return f"{data_file_path} is invalid as a data file path to save to."   
 
         with open(data_file_path, 'w') as data_safe:
             json.dump(self.data, data_safe, indent=2)
-        return f"Data written succesfully at {data_file_path}."
+        return f"Data written succesfully at \"{data_file_path}\" ."
     
     def load_recent_state(self,data_file_path: str = None) -> str:
         """
@@ -217,7 +216,7 @@ class TaskManager():
             file_name = os.path.join(file_path, report_name)
             with open(file_name, 'w') as report_file:
                 report_file.write(report)
-            return f"Report wrote succesfuly. And saved at the current directory with the following name:{file_name}"
+            return f"Report wrote succesfuly. And saved at the current directory with the following name:\n\"{file_name}\""
 
     def current_state(self,option: str = 'both') -> str:
         """ 
