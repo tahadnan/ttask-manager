@@ -118,6 +118,8 @@ class TaskManager():
         """
         added_tasks = []
         not_added = []
+        not_added_existence = []
+        not_added_priority = []
         for tasks in tasks_priorities:
             if isinstance(tasks, tuple) and len(tasks) == 2:
                 task, priority = tasks
@@ -131,20 +133,43 @@ class TaskManager():
                     self.to_do[task] = priority
                     self.daily_added_tasks[task] = priority
                     added_tasks.append(f"{task} (Priority: {priority})") 
-                else:
+                elif task.lower() in [task.lower() for task in self.to_do] and priority.lower() not in self.priority_levels:
                     not_added.append(task)
+                elif task.lower() in [task.lower() for task in self.to_do]:
+                    not_added_existence.append(task)
+                elif priority.lower() not in self.priority_levels:
+                    not_added_priority.append(f'{task} (Priority: {priority})')
             elif self.priorities_type == int:
                 if task.lower() not in [task.lower() for task in self.to_do] and priority in self.priority_levels:
                     self.to_do[task] = priority
                     self.daily_added_tasks[task] = priority
                     added_tasks.append(f"{task} (Priority: {priority})") 
-                else:
+                elif task.lower() in [task.lower() for task in self.to_do] and priority.lower() not in self.priority_levels:
                     not_added.append(task)
+                elif task.lower() in [task.lower() for task in self.to_do]:
+                    not_added_existence.append(task)
+                elif priority.lower() not in self.priority_levels:
+                    not_added_priority.append(f'{task} (Priority: {priority})')
+
         response = []
         if added_tasks:
             response.append(f"{', '.join(added_tasks)} added successfully.")
         if not_added:
-            response.append(f"{', '.join(not_added)} already in the to-do list:\n {self.to_do}")
+            if len(not_added) == 1:
+                response.append(f"{', '.join(not_added)} wasn't added to the To-Do list.\n ")
+            else:
+                response.append(f"{', '.join(not_added)} weren't added to the To-Do list.\n ")
+        if not_added_existence:
+            if len(not_added_existence) == 1:
+                response.append(f"{', '.join(not_added_existence)} is already in the To-Do list:\n {self.current_state('todo')}")
+            else:
+                response.append(f"{', '.join(not_added_existence)} are already in the To-Do list:\n {self.current_state('todo')}")
+        if not_added_priority:
+            if len(not_added_priority) == 1:
+                response.append(f"{', '.join(not_added_priority)} has an invalid priority. Available priorities are:\n{self.priority_levels} ")
+            else:
+                response.append(f"{', '.join(not_added_priority)} have an invalid priority. Available priorities are:\n{self.priority_levels} ")
+
         return " ".join(response)
     def remove_task(self,*tasks: str) -> str:
         """
