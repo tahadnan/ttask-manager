@@ -1,6 +1,6 @@
 [project]
 name = "ttask_manager"
-version = "0.2.7"
+version = "1.0.0"
 authors = [
   { name="Taha Yasser Adnan", email="tahadnan.101@gmail.com" },
 ]

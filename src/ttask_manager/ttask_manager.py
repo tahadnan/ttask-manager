@@ -1,51 +1,69 @@
 import json
 from json import JSONDecodeError
 from datetime import date
-from typing import List, Dict, Union, Optional
+from typing import List, Dict, Union, Optional, Literal, Tuple
 import os
 class TaskManager():
     """
-    A class to manage tasks, providing functionality for adding, removing, and marking tasks
-    as done, as well as saving/loading tasks to/from a JSON file and generating reports.
+    TaskManager provides functionality for managing tasks, including adding, removing, marking tasks as done, 
+    saving/loading task states from a JSON file, and generating task reports. Tasks can be assigned priorities 
+    (either strings or integers), and the task list can be customized or sorted based on these priorities.
+
+    Attributes:
+        to_do (dict): Dictionary of tasks yet to be completed, with task names as keys and their priorities as values.
+        done (dict): Dictionary of tasks that have been completed, with task names as keys and their priorities as values.
+        daily_added_tasks (dict): Dictionary of tasks added during the current day, used for reporting.
+        daily_completed_tasks (dict): Dictionary of tasks completed during the current day, used for reporting.
+        priority_levels (list): List of acceptable priority levels, either strings or integers.
+        default_priority (str or int): The default priority level for new tasks.
+        priorities_type (str or int): Defines the type of priorities used (string or integer).
     """
-    def __init__(self) -> None: 
-        """
-        Initializes a new instance of the TaskManager class.
 
-        Attributes:
-        to_do : list
-            A list of tasks that are yet to be completed.
-        done : list
-            A list of tasks that have been completed.
-        daily_added_tasks : list
-            A list of tasks that were added to the to-do list for the current day, used for reporting.
-        daily_completed_tasks : list
-            A list of tasks that were completed during the current day, used for reporting.
-        data : dict
-            A dictionary to store the current state of tasks, including to-do and done lists.
+    def __init__(self, priority_levels: List[Union[str, int]] = ['high', 'medium', 'low'], default_priority: Union[str, int] = 'medium', priorities_type: Literal[str, int] = str) -> None: 
         """
-        self.daily_added_tasks: List[str] = []
-        self.daily_completed_tasks: List[str] = []
-        self.to_do: List[str] = []
-        self.done: List[str] = []
-        self.data: Dict[str, List[str]] = {
-            'to_do' : self.to_do,
-            'done' : self.done,
-            'daily added tasks':self.daily_added_tasks,
-            'daily completed tasks':self.daily_completed_tasks
-        }   
-    def save_current_state(self,data_file_path: str =   None) -> str:        
-        """
-        Save the current state of the task manager to a JSON file.
+            Initializes a new TaskManager instance with optional customizable priority levels.
 
-        This method serializes the current state of the task manager, including tasks in the 
-        to-do, done, and reporting lists, and saves it to a local JSON file. The file will be 
-        saved in the directory where the script is saved.
+            Args:
+                priority_levels (list): A list of acceptable priority levels (string or integer). Defaults to ['high', 'medium', 'low'].
+                default_priority (str or int): The default priority assigned to tasks if not specified. Defaults to 'medium'.
+                priorities_type (str or int): Defines the type of priorities (either 'str' for string or 'int' for integer). Defaults to str.
+
+            Attributes:
+                to_do (dict): Tasks yet to be completed, with task names as keys and priorities as values.
+                done (dict): Completed tasks, with task names as keys and priorities as values.
+                daily_added_tasks (dict): Tasks added during the current day.
+                daily_completed_tasks (dict): Tasks completed during the current day.
+                priority_levels (list): A list of valid priority levels.
+                default_priority (str or int): Default priority level assigned to new tasks.
+                priorities_type (str or int): Defines the type of priority (either string or integer).
+        """
+        self.daily_added_tasks: Dict[str, Union[str, int]] = {}
+        self.daily_completed_tasks: Dict[str, Union[str, int]] = {}
+        self.to_do: Dict[str, Union[str, int]] = {}
+        self.done: Dict[str, Union[str, int]] = {}
+        self.data: Dict[str, Dict[str, Union[str, int]]] = {
+            'to_do': self.to_do,
+            'done': self.done,
+            'daily added tasks': self.daily_added_tasks,
+            'daily completed tasks': self.daily_completed_tasks
+        }
+        self.priority_levels: List[Union[str, int]] = priority_levels
+        self.default_priority: Union[str, int] = default_priority
+        self.priorities_type: Literal['str', 'int'] = priorities_type
+    def save_current_state(self,data_file_path: str = './data.json') -> str:        
+        """
+        Saves the current state of the task manager to a JSON file.
+
+        The current state includes tasks in the to-do, done, and reporting lists. The data is serialized
+        and saved as a JSON file in the specified directory.
+
+        Args:
+            data_file_path (str): The file path where the task state will be saved. Defaults to './data.json'.
 
         Returns:
-            str: A success message indicating the file path where the data was written, 
-            or an error message if the operation fails.
+            str: A message indicating whether the data was successfully saved, or if an error occurred.
         """
+
         if not data_file_path:
             return f"{data_file_path} is invalid as a data file path to save to."   
 
@@ -53,30 +71,31 @@ class TaskManager():
             json.dump(self.data, data_safe, indent=2)
         return f"Data written succesfully at \"{data_file_path}\" ."
     
-    def load_recent_state(self,data_file_path: str = None) -> str:
+    def load_state(self,data_file_path: Optional[str] = './data.json') -> str:
         """
-        Load the most recent task manager state from a JSON file.
+        Loads a task manager state from a JSON file.
 
-        This method retrieves the previously saved state from a JSON file, updating the to-do, 
-        done, and reporting lists in the task manager. The file will be loaded from the 
-        directory where the script is saved. If the file does not exist or contains invalid 
-        data, it resets the state and starts fresh.
+        This method retrieves and loads the saved task state from the specified JSON file. If the file 
+        does not exist or contains invalid data, the state will be reset and a fresh start initiated.
+
+        Args:
+            data_file_path (str, optional): The file path from which to load the state. Defaults to './data.json'.
 
         Returns:
-            str: A message indicating successful data loading, or an error message if no 
-            data is found or if there is an issue with the file.
+            str: A message indicating whether the data was successfully loaded or if an error occurred.
         """
-        if not data_file_path:
+
+        if not os.path.exists(data_file_path):
             self.reset()
             return f"{data_file_path} is invalid as a data file path."
 
         try:
             with open(data_file_path, 'r') as data_safe:
                 data = json.load(data_safe)
-            self.to_do = data.get('to_do', [])
-            self.done = data.get('done', [])
-            self.daily_added_tasks = data.get('daily added tasks', [])
-            self.daily_completed_tasks = data.get('daily completed tasks', [])
+            self.to_do = data.get('to_do', {})
+            self.done = data.get('done', {})
+            self.daily_added_tasks = data.get('daily added tasks', {})
+            self.daily_completed_tasks = data.get('daily completed tasks', {})
 
             return "Data loaded succesfully, ready to go!"
         except FileNotFoundError:
@@ -87,25 +106,40 @@ class TaskManager():
             self.reset()
             return "Error loading data. Starting fresh."       
 
-    def add_task(self,*tasks: str) -> str:  
+    def add_task(self, *tasks_priorities: Union[str, Tuple[str, Union[str, int]]]) -> str:  
         """
         Adds one or more tasks to the to-do list if they are not already present.
 
         Args:
-            *tasks: The tasks to be added to the to-do list.
+            *tasks_priorities: The tasks to be added to the to-do list. Can be a string (task name) or a tuple (task name, priority).
 
         Returns:
             str: A message indicating which tasks were added or already exist in the list.
         """
-        added_tasks: List[str] = []
-        not_added: List[str] = []
-        for task in tasks:
-            if task.lower() not in self.to_do:
-                self.to_do.append(task.lower())
-                self.daily_added_tasks.append(task.lower())
-                added_tasks.append(task)
+        added_tasks = []
+        not_added = []
+        for tasks in tasks_priorities:
+            if isinstance(tasks, tuple) and len(tasks) == 2:
+                task, priority = tasks
+            elif isinstance(tasks, str):
+                task, priority = tasks, self.default_priority
             else:
-                not_added.append(task)
+                print(f"{tasks} can't be added.")
+                continue
+            if self.priorities_type == str:
+                if task.lower() not in [task.lower() for task in self.to_do] and priority.lower() in self.priority_levels:
+                    self.to_do[task] = priority
+                    self.daily_added_tasks[task] = priority
+                    added_tasks.append(f"{task} (Priority: {priority})") 
+                else:
+                    not_added.append(task)
+            elif self.priorities_type == int:
+                if task.lower() not in [task.lower() for task in self.to_do] and priority in self.priority_levels:
+                    self.to_do[task] = priority
+                    self.daily_added_tasks[task] = priority
+                    added_tasks.append(f"{task} (Priority: {priority})") 
+                else:
+                    not_added.append(task)
         response = []
         if added_tasks:
             response.append(f"{', '.join(added_tasks)} added successfully.")
@@ -124,12 +158,13 @@ class TaskManager():
         """
         removed_tasks = []
         not_found_tasks = []
-
+        task_keys = {task.lower(): task for task in self.to_do.keys()}
         for task in tasks:
-            if task.lower() in self.to_do:
-                self.to_do.remove(task.lower())
-                self.daily_added_tasks.remove(task.lower())
-                removed_tasks.append(task)
+            if task.lower() in task_keys:
+                og_task = task_keys[task.lower()]
+                self.to_do.pop(og_task)
+                self.daily_added_tasks.pop(og_task)
+                removed_tasks.append(og_task)
             else:
                 not_found_tasks.append(task)
 
@@ -144,81 +179,125 @@ class TaskManager():
         """
         Marks one or more tasks as done by moving them from the to-do list to the done list.
 
+        Tasks are moved from the to-do list to the done list. If a task is already in the done list, it will 
+        not be marked again.
+
         Args:
-            *tasks: The tasks to be marked as done.
+            *tasks (str): The task names to be marked as done.
 
         Returns:
-            str: A message indicating which tasks were successfully marked as done or already completed.
+            str: A message indicating which tasks were successfully marked as done, already completed, or not found.
         """
+
         done_tasks = []
         already_done_tasks = []
-        absent_task = []
+        absent_tasks = []
+        task_keys = {task.lower(): task for task in self.to_do.keys()}
         for task in tasks:
-            if task.lower() not in self.done and task.lower() in self.to_do:
-                self.done.append(task.lower())
-                self.daily_completed_tasks.append(task.lower())
-                self.to_do.remove(task.lower())
-                done_tasks.append(task)
-            elif task.lower() in self.done:
-                already_done_tasks.append(task)
-            else            :
-                absent_task.append(task)
+            if task.lower() in task_keys:  
+                original_task = task_keys[task.lower()]  
+                if original_task not in self.done:  
+                    self.done[original_task] = self.to_do[original_task]  
+                    self.daily_completed_tasks[original_task] = self.to_do[original_task]  
+                    self.to_do.pop(original_task)  
+                    done_tasks.append(original_task)  
+                else:
+                    already_done_tasks.append(original_task) 
+            else:
+                absent_tasks.append(task)  
         response = []
         if done_tasks:
             response.append(f"{', '.join(done_tasks)} marked as done.")
         if already_done_tasks:
             response.append(f"{', '.join(already_done_tasks)} already done.")
-        if absent_task:
-            response.append(f"{', '.join(absent_task)} not in to-do list.")
+        if absent_tasks:
+            response.append(f"{', '.join(absent_tasks)} not in to-do list.")
         return " ".join(response)
 
-    def _format_task_list(self, tasks: List[str], list_type: str) -> str :
+    def _format_task_list(self, tasks: Dict[str, Union[str, int]], which_one: str) -> str :
         """
-        Formats a list of tasks for display, numbering them and indicating the type (to-do or done).
+        Formats a dictionary of tasks for display, numbering them and displaying their priority levels.
+
+        The tasks are sorted by their priority levels and formatted into a numbered list for easier reading.
 
         Args:
-            tasks (List[str]): The tasks to be formatted.
-            list_type (str): The type of tasks (e.g., 'to-do' or 'done') for display purposes.
+            tasks (dict): Dictionary of tasks with task names as keys and priorities as values.
+            which_one (str): Specifies whether the tasks are 'to-do' or 'done' for labeling purposes.
 
         Returns:
-            str: A formatted string representation of the tasks.
+            str: A formatted string of tasks, including numbering and priority levels.
         """
-        if not tasks:
-            return f"No {list_type} tasks."
-    
-        formatted_list = f"{list_type.capitalize()} Tasks:\n"
-        for idx, task in enumerate(tasks, 1):
-            formatted_list += f"{idx}. {task.capitalize()}\n"
-        return formatted_list.strip()
 
-    def report(self,file_path=None, report_name : Optional[str]=f"{date.today()}_tasks.txt") :
+        if not tasks:
+            return f"No {which_one} tasks."
+
+        sorted_tasks = sorted(tasks.items(), key=lambda x: self.priority_levels.index(x[1]))
+        max_task_length = max(len(task) for task in tasks.keys()) + 2
+        header = f"{'ID':<4} {'Task':<{max_task_length}} Priority\n{'-'*4} {'-'*max_task_length} {'-'*8}\n"
+        formatted_list = f"{which_one.capitalize()} Tasks:\n"
+        formatted_list += header
+
+        if self.priorities_type == str:
+            for idx, (task,priority) in enumerate(sorted_tasks, 1):
+                formatted_list += f"{idx:<5}{task:<{max_task_length+1}}{priority.capitalize()}\n"
+            return formatted_list
+        elif self.priorities_type == int:
+            for idx, (task,priority) in enumerate(sorted_tasks, 1):
+                formatted_list += f"{idx:<5}{task:<{max_task_length+1}}{priority}\n"
+            return formatted_list  
+
+    def report(self, file_path: str = './', 
+    report_name: str = f"{date.today()}_tasks.txt",
+    report_content: Literal['all', 'todo', 'done'] = 'all') :
         """
         Generates and saves a report of the day's to-do and completed tasks to a text file.
 
+        The report can include either to-do tasks, done tasks, or both. It is saved to the specified file path.
+
         Args:
-            file_name (str, optional): The name of the file where the report will be saved.
-            Defaults to a file named with the current date.
+            file_path (str, optional): The directory where the report will be saved. Defaults to './' (The cwd).
+            report_name (str, optional): The name of the file where the report will be saved. Defaults to a file named with the current date.
+            report_content (str, optional): Specifies which tasks to include in the report ('todo', 'done', or 'all'). Defaults to 'all'.
 
         Returns:
-            str: A message confirming the report was saved or if both task lists are empty.
+            str: A message confirming the report was saved, or an error message if no tasks were found.
         """
+
         if not self.daily_added_tasks and not self.daily_completed_tasks:
             return "Both lists are empty, are you willing to save nothing? Do somrthing, you Panda."
         else:
             todo_final = self._format_task_list(self.daily_added_tasks, 'To-Do')
             done_final = self._format_task_list(self.daily_completed_tasks, 'Done')
-            report = f'''{date.today()} Tasks were:
+            if report_content.lower() == 'todo': 
+                report = f'''{date.today()} Tasks were:
 
-{todo_final}
+{todo_final}        
+            '''
+                file_name = os.path.join(file_path, report_name)
+                with open(file_name, 'w') as report_file:
+                    report_file.write(report)
+                return f"Report wrote succesfuly. And saved at the current directory with the following name:\n\"{file_name}\""
+            elif report_content == 'done':
+                report = f'''{date.today()} Tasks were:
 
 {done_final}        
             '''
-            file_name = os.path.join(file_path, report_name)
-            with open(file_name, 'w') as report_file:
-                report_file.write(report)
-            return f"Report wrote succesfuly. And saved at the current directory with the following name:\n\"{file_name}\""
+                file_name = os.path.join(file_path, report_name)
+                with open(file_name, 'w') as report_file:
+                    report_file.write(report)
+                return f"Report wrote succesfuly. And saved at the current directory with the following name:\n\"{file_name}\""
+            else:
+                report = f'''{date.today()} Tasks were:
 
-    def current_state(self,option: str = 'both') -> str:
+{todo_final}
+
+{done_final}
+            '''
+                file_name = os.path.join(file_path, report_name)
+                with open(file_name, 'w') as report_file:
+                    report_file.write(report)
+                return f"Report wrote succesfuly. And saved at the current directory with the following name:\n\"{file_name}\""
+    def current_state(self, option: Literal['both', 'to-do', 'done'] = 'both') -> str:
         """ 
         Displays the current state of the task manager, showing either the to-do, done, or both lists.
 
@@ -237,47 +316,35 @@ class TaskManager():
         else:
             return "Invalid option."
 
-    def clear_todo_list(self) -> str:
+    def clear(self,which_one:  Literal['both','todo','done'] = 'both') -> str:
         """
-        Clears the to-do list.
+        Resets todo list or done list or both lists.
 
         Returns:
-            str: A message indicating whether the to-do list was cleared successfully.
+            str: A message indicating whether specified list was cleared successfully.
         """
-        if not self.to_do :
-            return "It's already empty."
+        if which_one.lower() == 'todo': 
+            if self.to_do:
+                self.to_do.clear()
+                self.daily_added_tasks.clear()
+                return " To-do list is cleared succesfully."
+            else:
+                return "To-do list is empty."
+        elif which_one.lower() == 'done': 
+            if self.done:
+                self.done.clear()
+                self.daily_completed_tasks.clear()
+                return "Done list is cleared succesfully."
+            else:
+                return "Done list is empty."
+        elif which_one.lower() == 'all': 
+            if self.to_do:
+                self.to_do.clear()
+                self.daily_added_tasks.clear()
+                self.done.clear()
+                self.daily_completed_tasks.clear()
+                return "Both lists are cleared succesfully."
+            else:
+                return "Both lists are empty."
         else:
-            self.to_do.clear()
-            self.daily_added_tasks.clear()
-            return "To-Do list cleared."
-
-    def clear_done_list(self) -> str:
-        """
-        Clears the done list.
-
-        Returns:
-            str: A message indicating whether the done list was cleared successfully.
-        """
-        if not self.done :
-            return "It's already empty."
-        else:
-            self.done.clear()
-            self.daily_completed_tasks.clear()
-            return "Done list cleared."
-
-    def reset(self) -> str:
-        """
-        Resets both lists.
-
-        Returns:
-            str: A message indicating whether both lists were reset successfully.
-        """
-        if self.to_do or self.done:
-            self.to_do.clear()
-            self.done.clear()
-            self.daily_completed_tasks.clear()
-            self.daily_added_tasks.clear()
-            return "Both lists reseted and cleaned."
-        else:
-            return "The lists are already empty."
-
+            return "Invalid option."
