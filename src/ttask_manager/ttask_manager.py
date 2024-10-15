@@ -49,7 +49,7 @@ class TaskManager():
         }
         self.priority_levels: List[Union[str, int]] = priority_levels
         self.default_priority: Union[str, int] = default_priority
-        self.priorities_type: Literal['str', 'int'] = priorities_type
+        self.priorities_type: Literal[str, int] = priorities_type
     def save_current_state(self,data_file_path: str = './data.json') -> str:        
         """
         Saves the current state of the task manager to a JSON file.
@@ -87,7 +87,7 @@ class TaskManager():
 
         if not os.path.exists(data_file_path):
             self.clear()
-            return f"{data_file_path} is invalid as a data file path."
+            return f"\"{data_file_path}\" Doesn't exist. Starting fresh."
 
         try:
             with open(data_file_path, 'r') as data_safe:
@@ -129,31 +129,34 @@ class TaskManager():
                 print(f"{tasks} can't be added.")
                 continue
             if self.priorities_type == str:
-                if task.lower() not in [task.lower() for task in self.to_do] and priority.lower() in self.priority_levels:
+                if task.lower() not in [task.lower() for task in self.to_do] and priority.lower() in [p.lower() for p in self.priority_levels]:
                     self.to_do[task] = priority
                     self.daily_added_tasks[task] = priority
                     added_tasks.append(f"{task} (Priority: {priority})") 
-                elif task.lower() in [task.lower() for task in self.to_do] and priority.lower() not in self.priority_levels:
+                elif task.lower() in [task.lower() for task in self.to_do] and priority.lower() not in [p.lower() for p in self.priority_levels]:
                     not_added.append(task)
                 elif task.lower() in [task.lower() for task in self.to_do]:
                     not_added_existence.append(task)
-                elif priority.lower() not in self.priority_levels:
+                elif priority.lower() not in [p.lower() for p in self.priority_levels]:
                     not_added_priority.append(f'{task} (Priority: {priority})')
             elif self.priorities_type == int:
                 if task.lower() not in [task.lower() for task in self.to_do] and priority in self.priority_levels:
                     self.to_do[task] = priority
                     self.daily_added_tasks[task] = priority
                     added_tasks.append(f"{task} (Priority: {priority})") 
-                elif task.lower() in [task.lower() for task in self.to_do] and priority.lower() not in self.priority_levels:
+                elif task.lower() in [task.lower() for task in self.to_do] and priority not in self.priority_levels:
                     not_added.append(task)
                 elif task.lower() in [task.lower() for task in self.to_do]:
                     not_added_existence.append(task)
-                elif priority.lower() not in self.priority_levels:
+                elif priority not in self.priority_levels:
                     not_added_priority.append(f'{task} (Priority: {priority})')
 
         response = []
         if added_tasks:
-            response.append(f"{', '.join(added_tasks)} added successfully.")
+            if len(added_tasks) == 1:
+                response.append(f"{', '.join(added_tasks)} added successfully.")
+            else:
+                response.append(f"{', '.join(added_tasks)} added successfully.")
         if not_added:
             if len(not_added) == 1:
                 response.append(f"{', '.join(not_added)} wasn't added to the To-Do list.\n ")
@@ -161,9 +164,9 @@ class TaskManager():
                 response.append(f"{', '.join(not_added)} weren't added to the To-Do list.\n ")
         if not_added_existence:
             if len(not_added_existence) == 1:
-                response.append(f"{', '.join(not_added_existence)} is already in the To-Do list:\n {self.current_state('todo')}")
+                response.append(f"{', '.join(not_added_existence)} is already in the To-Do list:\n {self.current_state('to-do')}")
             else:
-                response.append(f"{', '.join(not_added_existence)} are already in the To-Do list:\n {self.current_state('todo')}")
+                response.append(f"{', '.join(not_added_existence)} are already in the To-Do list:\n {self.current_state('to-do')}")
         if not_added_priority:
             if len(not_added_priority) == 1:
                 response.append(f"{', '.join(not_added_priority)} has an invalid priority. Available priorities are:\n{self.priority_levels} ")
@@ -255,8 +258,10 @@ class TaskManager():
 
         if not tasks:
             return f"No {which_one} tasks."
-
-        sorted_tasks = sorted(tasks.items(), key=lambda x: self.priority_levels.index(x[1]))
+        if self.priorities_type == int:
+            sorted_tasks = sorted(tasks.items(), key=lambda x: self.priority_levels.index(x[1]))
+        elif self.priorities_type == str:
+            sorted_tasks = sorted(tasks.items(), key=lambda x: self.priority_levels.index(x[1].lower()))
         max_task_length = max(len(task) for task in tasks.keys()) + 2
         header = f"{'ID':<4} {'Task':<{max_task_length}} Priority\n{'-'*4} {'-'*max_task_length} {'-'*8}\n"
         formatted_list = f"{which_one.capitalize()} Tasks:\n"
@@ -271,9 +276,7 @@ class TaskManager():
                 formatted_list += f"{idx:<5}{task:<{max_task_length+1}}{priority}\n"
             return formatted_list  
 
-    def report(self, file_path: str = './', 
-    report_name: str = f"{date.today()}_tasks.txt",
-    report_content: Literal['all', 'todo', 'done'] = 'all') :
+    def report(self, file_path: str = './', report_name: str = f"{date.today()}_tasks.txt",report_content: Literal['all', 'todo', 'done'] = 'all') :
         """
         Generates and saves a report of the day's to-do and completed tasks to a text file.
 
@@ -337,7 +340,7 @@ class TaskManager():
         elif option == 'to-do':
             return self._format_task_list(self.to_do, 'to-do')
         elif option == 'done':
-            return self._format_task_list(self.done, ('done'))
+            return self._format_task_list(self.done, 'done')
         else:
             return "Invalid option."
 
