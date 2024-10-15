@@ -86,7 +86,7 @@ class TaskManager():
         """
 
         if not os.path.exists(data_file_path):
-            self.reset()
+            self.clear()
             return f"{data_file_path} is invalid as a data file path."
 
         try:
@@ -99,11 +99,11 @@ class TaskManager():
 
             return "Data loaded succesfully, ready to go!"
         except FileNotFoundError:
-            self.reset()
+            self.clear()
             return 'No saved data found starting fresh.'  
         except JSONDecodeError as e:
             print(f"Error parsing JSON: {e}")
-            self.reset()
+            self.clear()
             return "Error loading data. Starting fresh."       
 
     def add_task(self, *tasks_priorities: Union[str, Tuple[str, Union[str, int]]]) -> str:  
