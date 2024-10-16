@@ -41,15 +41,17 @@ class TaskManager():
         self.daily_completed_tasks: Dict[str, Union[str, int]] = {}
         self.to_do: Dict[str, Union[str, int]] = {}
         self.done: Dict[str, Union[str, int]] = {}
-        self.data: Dict[str, Dict[str, Union[str, int]]] = {
+        self.priority_levels: List[Union[str, int]] = priority_levels
+        self.default_priority: Union[str, int] = default_priority
+        self.priorities_type: Literal[str, int] = priorities_type
+    @property
+    def data(self) -> Dict[str, Dict[str, Union[str, int]]]:
+        return {
             'to_do': self.to_do,
             'done': self.done,
             'daily added tasks': self.daily_added_tasks,
             'daily completed tasks': self.daily_completed_tasks
         }
-        self.priority_levels: List[Union[str, int]] = priority_levels
-        self.default_priority: Union[str, int] = default_priority
-        self.priorities_type: Literal[str, int] = priorities_type
     def save_current_state(self,data_file_path: str = './data.json') -> str:        
         """
         Saves the current state of the task manager to a JSON file.
