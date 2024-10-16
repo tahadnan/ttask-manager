@@ -45,7 +45,7 @@ class TaskManager():
         self.default_priority: Union[str, int] = default_priority
         self.priorities_type: Literal[str, int] = priorities_type
     @property
-    def data(self) -> Dict[str, Dict[str, Union[str, int]]]:
+    def data(self) -> Dict[str, Dict[str, Dict[str, Union[str, int]]]]:
         return {
             'to_do': self.to_do,
             'done': self.done,
