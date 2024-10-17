@@ -306,7 +306,7 @@ class TaskManager():
                 file_name = os.path.join(file_path, report_name)
                 with open(file_name, 'w') as report_file:
                     report_file.write(report)
-                return f"Report wrote succesfuly. And saved at the current directory with the following name:\n\"{file_name}\""
+                return f"Report successfully generated and saved as \"{file_name}\""
             elif report_content == 'done':
                 report = f'''{date.today()} Tasks were:
 
@@ -315,7 +315,7 @@ class TaskManager():
                 file_name = os.path.join(file_path, report_name)
                 with open(file_name, 'w') as report_file:
                     report_file.write(report)
-                return f"Report wrote succesfuly. And saved at the current directory with the following name:\n\"{file_name}\""
+                return f"Report successfully generated and saved as \"{file_name}\""
             else:
                 report = f'''{date.today()} Tasks were:
 
@@ -326,7 +326,7 @@ class TaskManager():
                 file_name = os.path.join(file_path, report_name)
                 with open(file_name, 'w') as report_file:
                     report_file.write(report)
-                return f"Report wrote succesfuly. And saved at the current directory with the following name:\n\"{file_name}\""
+                return f"Report successfully generated and saved as \"{file_name}\""
     def current_state(self, option: Literal['both', 'to-do', 'done'] = 'both') -> str:
         """ 
         Displays the current state of the task manager, showing either the to-do, done, or both lists.
