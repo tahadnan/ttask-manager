@@ -2,6 +2,7 @@ import json
 from json import JSONDecodeError
 from datetime import date
 from typing import List, Dict, Union, Optional, Literal, Tuple
+from rich.console import Console,Theme
 import os
 class TaskManager():
     """
@@ -44,6 +45,14 @@ class TaskManager():
         self.priority_levels: List[Union[str, int]] = priority_levels
         self.default_priority: Union[str, int] = default_priority
         self.priorities_type: Literal[str, int] = priorities_type
+        self.message_theme = Theme({
+            "other": "bright_cyan ",
+            "info": "dim cyan italic",
+            "success": "light_green bold",
+            "error": "bold red"
+        })
+        self.console = Console(theme=self.message_theme)
+
     @property
     def data(self) -> Dict[str, Dict[str, Dict[str, Union[str, int]]]]:
         return {
@@ -67,11 +76,11 @@ class TaskManager():
         """
 
         if not data_file_path:
-            return f"{data_file_path} is invalid as a data file path to save to."   
+            self.console.print(f"{data_file_path} is invalid as a data file path to save to.",style="error")   
 
         with open(data_file_path, 'w') as data_safe:
             json.dump(self.data, data_safe, indent=2)
-        return f"Data written succesfully at \"{data_file_path}\" ."
+        self.console.print(f"Data written succesfully at \"{data_file_path}\" .",style="success")
     
     def load_state(self,data_file_path: Optional[str] = './data.json') -> str:
         """
@@ -89,7 +98,7 @@ class TaskManager():
 
         if not os.path.exists(data_file_path):
             self.clear()
-            return f"\"{data_file_path}\" Doesn't exist. Starting fresh."
+            self.console.print(f"\"{data_file_path}\" Doesn't exist. Starting fresh.",style="info")
 
         try:
             with open(data_file_path, 'r') as data_safe:
@@ -99,14 +108,13 @@ class TaskManager():
             self.daily_added_tasks = data.get('daily added tasks', {})
             self.daily_completed_tasks = data.get('daily completed tasks', {})
 
-            return "Data loaded succesfully, ready to go!"
+            self.console.print("Data loaded succesfully, ready to go!",style="info")
         except FileNotFoundError:
             self.clear()
-            return 'No saved data found starting fresh.'  
+            self.console.print('No saved data found, starting fresh.',style="error")  
         except JSONDecodeError as e:
-            print(f"Error parsing JSON: {e}")
-            self.clear()
-            return "Error loading data. Starting fresh."       
+            self.console.print(f"Error parsing JSON: {e}\nStarting Fresh.",style="error")
+            self.clear()      
 
     def add_task(self, *tasks_priorities: Union[str, Tuple[str, Union[str, int]]]) -> str:  
         """
@@ -128,7 +136,7 @@ class TaskManager():
             elif isinstance(tasks, str):
                 task, priority = tasks, self.default_priority
             else:
-                print(f"{tasks} can't be added.")
+                self.console.print(f"{tasks} can't be added.",style="error")
                 continue
             if self.priorities_type == str:
                 if task.lower() not in [task.lower() for task in self.to_do] and priority.lower() in [p.lower() for p in self.priority_levels]:
@@ -156,26 +164,26 @@ class TaskManager():
         response = []
         if added_tasks:
             if len(added_tasks) == 1:
-                response.append(f"{', '.join(added_tasks)} added successfully.")
+                response.append(f"[success]{',\n'.join(added_tasks)}[/success] [info]added successfully.[/info]\n")
             else:
-                response.append(f"{', '.join(added_tasks)} added successfully.")
+                response.append(f"[success]{',\n'.join(added_tasks)}[/success] [info]added successfully.[/info]\n")
         if not_added:
             if len(not_added) == 1:
-                response.append(f"{', '.join(not_added)} wasn't added to the To-Do list.\n ")
+                response.append(f"[error]{',\n'.join(not_added)}[/error] [info]wasn't added to the To-Do list.[/info]\n ")
             else:
-                response.append(f"{', '.join(not_added)} weren't added to the To-Do list.\n ")
+                response.append(f"[error]{',\n'.join(not_added)}[/error] [info]weren't added to the To-Do list.[/info]\n ")
         if not_added_existence:
             if len(not_added_existence) == 1:
-                response.append(f"{', '.join(not_added_existence)} is already in the To-Do list:\n {self.current_state('to-do')}")
+                response.append(f"[info]{',\n'.join(not_added_existence)}[/info] is already in the To-Do list:\n",self.current_state('to-do'))
             else:
-                response.append(f"{', '.join(not_added_existence)} are already in the To-Do list:\n {self.current_state('to-do')}")
+                response.append(f"[info]{',\n'.join(not_added_existence)}[/info] are already in the To-Do list:\n",self.current_state('to-do'))
         if not_added_priority:
             if len(not_added_priority) == 1:
-                response.append(f"{', '.join(not_added_priority)} has an invalid priority. Available priorities are:\n{self.priority_levels} ")
+                response.append(f"[error]{',\n'.join(not_added_priority)}[error] has an invalid priority. Available priorities are:\n",self.priority_levels)
             else:
-                response.append(f"{', '.join(not_added_priority)} have an invalid priority. Available priorities are:\n{self.priority_levels} ")
+                response.append(f"[error]{',\n'.join(not_added_priority)}[error] have an invalid priority. Available priorities are:\n",self.priority_levels)
 
-        return " ".join(response)
+        self.console.print(" ".join(response))
     def remove_task(self,*tasks: str) -> str:
         """
         Removes one or more tasks from the to-do list.
@@ -199,11 +207,11 @@ class TaskManager():
                 not_found_tasks.append(task)
 
         if removed_tasks and not_found_tasks:
-            return f"{', '.join(removed_tasks)} removed successfully. However, {', '.join(not_found_tasks)} not found in the to-do list."
+            self.console.print(f"[success]{', '.join(removed_tasks)} removed successfully.[/success]\n[error]However, {', '.join(not_found_tasks)} not found in the to-do list.[/error]")
         elif removed_tasks:
-            return f"{', '.join(removed_tasks)} removed successfully."
+            self.console.print(f"[success]{', '.join(removed_tasks)} removed successfully.[/success]")
         elif not_found_tasks:
-            return f"{', '.join(not_found_tasks)} not found in the to-do list."
+            self.console.print(f"[error]{', '.join(not_found_tasks)} not found in the to-do list.[/error]")
 
     def task_done(self, *tasks: str) -> str:
         """
@@ -237,12 +245,12 @@ class TaskManager():
                 absent_tasks.append(task)  
         response = []
         if done_tasks:
-            response.append(f"{', '.join(done_tasks)} marked as done.")
+            response.append(f"[success]{',\n'.join(done_tasks)}[success] [info]marked as done.\n[/info]")
         if already_done_tasks:
-            response.append(f"{', '.join(already_done_tasks)} already done.")
+            response.append(f"[info]{',\n'.join(already_done_tasks)} already done.[/info]")
         if absent_tasks:
-            response.append(f"{', '.join(absent_tasks)} not in to-do list.")
-        return " ".join(response)
+            response.append(f"[error]{',\n'.join(absent_tasks)} not in to-do list.[/error]")
+        self.console.print((" ".join(response)))
 
     def _format_task_list(self, tasks: Dict[str, Union[str, int]], which_one: str) -> str :
         """
@@ -292,9 +300,14 @@ class TaskManager():
         Returns:
             str: A message confirming the report was saved, or an error message if no tasks were found.
         """
+        def _finalize():
+            file_name = os.path.join(file_path, report_name)
+            with open(file_name, 'w') as report_file:
+                report_file.write(report)
+            self.console.print(f"[success]Report successfully generated and saved as \"{file_name}\"[/success]")
 
         if not self.daily_added_tasks and not self.daily_completed_tasks:
-            return "Both lists are empty, are you willing to save nothing? Do somrthing, you Panda."
+            self.console.print("Both lists are empty, are you willing to save nothing? Do something, you Panda.",style="info")
         else:
             todo_final = self._format_task_list(self.daily_added_tasks, 'To-Do')
             done_final = self._format_task_list(self.daily_completed_tasks, 'Done')
@@ -303,19 +316,15 @@ class TaskManager():
 
 {todo_final}        
             '''
-                file_name = os.path.join(file_path, report_name)
-                with open(file_name, 'w') as report_file:
-                    report_file.write(report)
-                return f"Report successfully generated and saved as \"{file_name}\""
+                _finalize()
+
             elif report_content == 'done':
                 report = f'''{date.today()} Tasks were:
 
 {done_final}        
             '''
-                file_name = os.path.join(file_path, report_name)
-                with open(file_name, 'w') as report_file:
-                    report_file.write(report)
-                return f"Report successfully generated and saved as \"{file_name}\""
+                _finalize()
+
             else:
                 report = f'''{date.today()} Tasks were:
 
@@ -323,10 +332,8 @@ class TaskManager():
 
 {done_final}
             '''
-                file_name = os.path.join(file_path, report_name)
-                with open(file_name, 'w') as report_file:
-                    report_file.write(report)
-                return f"Report successfully generated and saved as \"{file_name}\""
+                _finalize()
+                
     def current_state(self, option: Literal['both', 'to-do', 'done'] = 'both') -> str:
         """ 
         Displays the current state of the task manager, showing either the to-do, done, or both lists.
@@ -338,13 +345,13 @@ class TaskManager():
             str: A formatted string representing the requested task list(s).
         """
         if option == 'both':
-            return f"{self._format_task_list(self.to_do, 'to-do')}\n\n{self._format_task_list(self.done, 'done')}"
+            print(f"{self._format_task_list(self.to_do, 'to-do')}\n\n{self._format_task_list(self.done, 'done')}")
         elif option == 'to-do':
-            return self._format_task_list(self.to_do, 'to-do')
+            print(self._format_task_list(self.to_do, 'to-do'))
         elif option == 'done':
-            return self._format_task_list(self.done, 'done')
+            print(self._format_task_list(self.done, 'done'))
         else:
-            return "Invalid option."
+            self.console.print("Invalid option.",style="error")
 
     def clear(self,which_one:  Literal['both','todo','done'] = 'both') -> str:
         """
@@ -357,24 +364,24 @@ class TaskManager():
             if self.to_do:
                 self.to_do.clear()
                 self.daily_added_tasks.clear()
-                return " To-do list is cleared succesfully."
+                self.console.print(" To-do list is cleared succesfully.",style="success")
             else:
-                return "To-do list is empty."
+                self.console.print("To-do list is empty.",style="info")
         elif which_one.lower() == 'done': 
             if self.done:
                 self.done.clear()
                 self.daily_completed_tasks.clear()
-                return "Done list is cleared succesfully."
+                self.console.print("Done list is cleared succesfully.",style="success")
             else:
-                return "Done list is empty."
+                self.console.print("Done list is empty.",style="info")
         elif which_one.lower() == 'all': 
             if self.to_do:
                 self.to_do.clear()
                 self.daily_added_tasks.clear()
                 self.done.clear()
                 self.daily_completed_tasks.clear()
-                return "Both lists are cleared succesfully."
+                self.console.print("Both lists are cleared succesfully.",style="success")
             else:
-                return "Both lists are empty."
+                self.console.print("Both lists are empty.None cleared.",style="info")
         else:
-            return "Invalid option."
+            self.console.print("Invalid option.",style="error")
