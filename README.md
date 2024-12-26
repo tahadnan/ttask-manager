@@ -14,32 +14,18 @@ The TaskManager package provides functionality to:
 - Generate detailed reports of tasks
 - Support for both string and integer priority types
 
-# WHAT'S NEW IN 1.0.0:
-
-In version **1.0.0**, the `TaskManager` class introduces several significant improvements and new features over version **0.2.7**:
-
-- **Task Storage**: Tasks are now stored in **dictionaries** with associated **priority levels**, allowing for more flexible task management.
-- **Priority Management**: Users can assign priorities to tasks (e.g., 'high', 'medium', or 'low') using either **string** or **integer** priority types.
-- **Task Addition**: The `add_task()` method has been enhanced to accept both **simple string tasks** and **(task, priority) tuples**, giving users more control over task creation.
-- **Improved Reporting**: Users can now generate reports filtered by **'to-do'**, **'done'**, or **all tasks**, making the reporting process more customizable.
-- **Formatted Task Lists**: Task lists are now displayed with improved formatting, including task numbers and their respective priorities.
-- **Enhanced Task Management**: The methods for removing tasks and marking them as done have been refined for better performance and ease of use.
-- **State Handling**: Saving and loading the task manager's state via JSON files remains a core feature, but it's now more robust and integrated with the new priority system.
-
-These changes make the `TaskManager` class more powerful and versatile, providing a better user experience and greater flexibility in managing tasks.
-
 ## Usage
 
 Here's a quick example of how to use the TaskManager effectively:
 
 ```python
-from ttask_manager.ttask_manager import TaskManager
+from ttask_manager import TaskManager
 
 # Create a new TaskManager instance
 tm = TaskManager()
 
-# Load existing tasks (if any)
-tm.load_recent_state()
+# Load existing tasks (if any) from a .json file
+tm.load_recent_state('~/data_file_path')
 
 # Add multiple tasks to the to-do list
 tm.add_task(("Write README","medium"), "Create setup.py", ("Push to GitHub","high"), "Test the application")
@@ -53,14 +39,17 @@ tm.task_done("Write README", "Test the application")
 # View completed tasks
 tm.current_state('done')
 
+# Print the current state
+print(tm)
+
 # Generate a report of today's tasks
-tm.report()
+tm.report('~/a_dir_to_save_to','report_file_name.txt')
 
 # Clear the to-do list after completing tasks
 tm.clear('todo')
 
-# Reset both lists if needed
-tm.reset()
+# Save current tasks (if any) to a .json file
+tm.save_current_state('~/data_file_path')
 ```
 
 This example showcases how to create a TaskManager instance, load existing tasks, manage to-do and completed tasks, generate a daily report, and reset the lists as needed.
