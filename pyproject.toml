@@ -7,6 +7,9 @@ authors = [
 description = "A simple task management package."
 readme = "README.md"
 requires-python = ">=3.8"
+dependencies = [
+    "rich"
+]
 classifiers = [
     "Programming Language :: Python :: 3",
     "License :: OSI Approved :: MIT License",
