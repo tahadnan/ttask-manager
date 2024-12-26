@@ -405,7 +405,7 @@ class TaskManager:
         """
         if option == 'both':
             self._format_task_list(self.to_do, 'to-do', print_it)
-            self._format_task_list(self.to_do, 'done', print_it)
+            self._format_task_list(self.done, 'done', print_it)
         elif option == 'to-do':
             self._format_task_list(self.to_do, 'to-do', print_it)
         elif option == 'done':
@@ -434,7 +434,7 @@ class TaskManager:
                 TaskManager.console.print("Done list is cleared successfully.",style="success")
             else:
                 TaskManager.console.print("Done list is empty.",style="info")
-        elif which_one.lower() == 'all': 
+        elif which_one.lower() == 'both':
             if self.to_do:
                 self.to_do.clear()
                 self.daily_added_tasks.clear()
