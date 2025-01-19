@@ -25,7 +25,7 @@ from ttask_manager import TaskManager
 tm = TaskManager()
 
 # Load existing tasks (if any) from a .json file
-tm.load_recent_state('~/data_file_path')
+tm.load_state('~/data_file_path')
 
 # Add multiple tasks to the to-do list
 tm.add_task(("Write README","medium"), "Create setup.py", ("Push to GitHub","high"), "Test the application")

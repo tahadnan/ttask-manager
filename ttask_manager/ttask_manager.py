@@ -178,6 +178,7 @@ class TaskManager:
         not_added_priority = []
         lowercase_tasks = {task.lower() for task in self.to_do}
         lowercase_priority_levels = {p.lower() for p in self.priority_levels} if self.priorities_type == "literal" else set(self.priority_levels)
+
         for tasks in tasks_priorities:
             if isinstance(tasks, tuple) and len(tasks) == 2:
                 task, priority = self._verify_task_priority(tasks[0], which_one='task'), self._verify_task_priority(tasks[1], which_one='priority')
@@ -192,7 +193,7 @@ class TaskManager:
                 if lowercase_task not in lowercase_tasks and lowercase_priority in lowercase_priority_levels:
                     self.to_do[task] = priority
                     self.daily_added_tasks[task] = priority
-                    added_tasks.append(f"{task} [bright_blue i](Priority: {priority})[/bright_blue i]") 
+                    added_tasks.append(f"{task} [bright_blue i](Priority: {priority})[/bright_blue i]")
                 elif lowercase_task in lowercase_tasks and lowercase_priority not in lowercase_priority_levels:
                     not_added.append(task)
                 elif lowercase_task in lowercase_tasks:
@@ -203,7 +204,7 @@ class TaskManager:
                 if lowercase_task not in lowercase_tasks and priority in self.priority_levels:
                     self.to_do[task] = priority
                     self.daily_added_tasks[task] = priority
-                    added_tasks.append(f"{task} [bright_blue i](Priority: {priority})[/bright_blue i]") 
+                    added_tasks.append(f"{task} [bright_blue i](Priority: {priority})[/bright_blue i]")
                 elif lowercase_task in lowercase_tasks and priority not in self.priority_levels:
                     not_added.append(task)
                 elif lowercase_task in lowercase_tasks:
@@ -214,7 +215,7 @@ class TaskManager:
         response = []
         if added_tasks:
             if len(added_tasks) == 1:
-                response.append(f"[success]{',\n'.join(added_tasks)}[/success] [info]added successfully.[/info]\n")
+                response.append(f"[success]{added_tasks[0]}[/success] [info]added successfully.[/info]\n")
             else:
                 response.append(f"[success]{',\n'.join(added_tasks)}[/success] [info]added successfully.[/info]\n")
         if not_added:
@@ -224,14 +225,16 @@ class TaskManager:
                 response.append(f"[error]{',\n'.join(not_added)}[/error] [info]weren't added to the To-Do list.[/info]\n ")
         if not_added_existence:
             if len(not_added_existence) == 1:
-                response.append(f"[info]{',\n'.join(not_added_existence)}[/info] is already in the To-Do list:\n{self.current_state('to-do')}")
+                response.append(f"[error]{not_added_existence[0]}[/error] [/info]is already in the To-Do list.[/info]\n")
             else:
-                response.append(f"[info]{',\n'.join(not_added_existence)}[/info] are already in the To-Do list:\n{self.current_state('to-do')}")
+                response.append(f"[error]{',\n'.join(not_added_existence)}[/error][info] are already in the To-Do list.[/info]\n")
+
         if not_added_priority:
             if len(not_added_priority) == 1:
                 response.append(f"[error]{',\n'.join(not_added_priority)}[error] has an invalid priority. Available priorities are:\n{"; ".join(self.priority_levels)}")
             else:
                 response.append(f"[error]{',\n'.join(not_added_priority)}[error] have an invalid priority. Available priorities are:\n{"; ".join(self.priority_levels)}")
+
         TaskManager.console.print(" ".join(response))
 
     def remove_task(self,*tasks: str) -> None:
@@ -257,11 +260,11 @@ class TaskManager:
                 not_found_tasks.append(task)
 
         if removed_tasks and not_found_tasks:
-            TaskManager.console.print(f"[success]{', '.join(removed_tasks)} [/success] [info]removed successfully.[/info]\n[error]However, {', '.join(not_found_tasks)} not found in the to-do list.[/error]")
+            TaskManager.console.print(f"[success]{', '.join(removed_tasks)} [/success] [info]removed successfully.[/info]However, [error]{', '.join(not_found_tasks)}[/error] not found in the to-do list.\n")
         elif removed_tasks:
-            TaskManager.console.print(f"[success]{', '.join(removed_tasks)} [/success] [info]removed successfully.[/info]")
+            TaskManager.console.print(f"[success]{', '.join(removed_tasks)} [/success] [info]removed successfully.[/info]\n")
         elif not_found_tasks:
-            TaskManager.console.print(f"[error]{', '.join(not_found_tasks)} not found in the to-do list.[/error]")
+            TaskManager.console.print(f"[error]{', '.join(not_found_tasks)} not found in the to-do list.[/error]\n")
 
     def task_done(self, *tasks: str) -> None:
         """
