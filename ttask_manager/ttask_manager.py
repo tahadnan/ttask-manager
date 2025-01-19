@@ -1,12 +1,10 @@
 import json
 from json import JSONDecodeError
 import os
-import re
 from datetime import date
 from typing import List, Dict, Union, Optional, Literal, Tuple
 from rich.console import Console,Theme
 from rich.table import Table
-
 
 class TaskManager:
     """
@@ -50,14 +48,31 @@ class TaskManager:
     @property
     def data(self) -> Dict[str, Dict[str, Union[str, int]]]:
         return {
-            'to_do': self.to_do,
-            'done': self.done,
-            'daily added tasks': self.daily_added_tasks,
-            'daily completed tasks': self.daily_completed_tasks
+            'to_do': self.to_do.copy(),
+            'done': self.done.copy(),
+            'daily added tasks': self.daily_added_tasks.copy(),
+            'daily completed tasks': self.daily_completed_tasks.copy()
         }
 
     @classmethod
-    def instantiation_legibility(cls, priority_levels:List[Union[str, int]], default_priority) -> Optional[Tuple[str,str]]:
+    def instantiation_legibility(cls, priority_levels:List[Union[str, int]], default_priority:Union[str, int]) -> Optional[Tuple[str,str]]:
+        """
+            Checks the arguments passed to the initializer.
+
+            Args:
+                priority_levels (List[Union[str, int]]): A list of priority levels, where each level can be either a string or an integer.
+                default_priority (Union[str, int]): The default priority level, which should match one of the levels in `priority_levels`.
+
+            Returns:
+                Optional[Tuple[str, str]]:
+                    - ("literal", default_priority) if priorities type evaluates to str.
+                    - ("numerical", default_priority) if priorities type evaluates to int.
+
+            Raises:
+                ValueError: - if `priority_levels` aren't type-homogeneous.
+                            - if `default_priority` isn't of the same type as priority levels, or it isn't in `priorities_level`.
+                            - if `default_priority` isn't of type int or str.
+        """
         if not all(isinstance(item, type(priority_levels[0])) for item in priority_levels) :
             raise ValueError("All elements in 'priority_levels' must be of the same type.")
         priorities_type = type(priority_levels[0])
@@ -72,10 +87,6 @@ class TaskManager:
         else:
             raise ValueError("Only string and integer priority types are supported.")
 
-    @staticmethod
-    def _remove_rich_styling(text: str) -> str:
-        return re.sub(r'\[.*?\]', '', text)
-    
     def save_current_state(self,data_file_path: str = './data.json') -> None:
         """
         Saves the current state of the task manager to a JSON file.
@@ -91,9 +102,9 @@ class TaskManager:
         """
 
         absolute_path = os.path.abspath(data_file_path)
-        directory_name = os.path.dirname(absolute_path)
         file_ext = os.path.splitext(absolute_path)[1]
-        if not os.path.exists(directory_name):
+
+        if not os.path.exists(absolute_path):
             TaskManager.console.print(f"{absolute_path} is invalid as a data file path to save to.",style="error")
             return
         if file_ext.lower() != ".json":
@@ -102,7 +113,7 @@ class TaskManager:
 
         with open(data_file_path, 'w') as data_safe:
             json.dump(self.data, data_safe, indent=2)
-        TaskManager.console.print(f"Data written successfully at \"{os.path.abspath(data_file_path)}\" .",style="success")
+        TaskManager.console.print(f"Data written successfully to \"{absolute_path}\" .",style="success")
     
     def load_state(self,data_file_path: Optional[str] = './data.json') -> None:
         """
@@ -118,10 +129,6 @@ class TaskManager:
             str: A message indicating whether the data was successfully loaded or if an error occurred.
         """
 
-        if not os.path.exists(data_file_path):
-            self.clear()
-            TaskManager.console.print(f"\"{data_file_path}\" Doesn't exist. Starting fresh.",style="info")
-
         try:
             with open(data_file_path, 'r') as data_safe:
                 data = json.load(data_safe)
@@ -132,11 +139,9 @@ class TaskManager:
 
             TaskManager.console.print("Data loaded successfully, ready to go!",style="info")
         except FileNotFoundError:
-            self.clear()
-            TaskManager.console.print('No saved data found, starting fresh.',style="error")  
+            TaskManager.console.print('No saved data found, keeping the existing state.',style="error")
         except JSONDecodeError as e:
-            TaskManager.console.print(f"Error parsing JSON: {e}\nStarting Fresh.",style="error")
-            self.clear()      
+            TaskManager.console.print(f"Error parsing JSON: {e}\nKeeping the existing state.",style="error")
 
     def _verify_task_priority(self,task_priority:Union[str,int], which_one:Literal['task','priority']):
         if which_one == 'priority':
@@ -182,7 +187,7 @@ class TaskManager:
                 TaskManager.console.print(f"{tasks} can't be added.",style="error")
                 continue
             lowercase_task = task.lower()
-            lowercase_priority = priority.lower()
+            lowercase_priority = priority.lower() if self.priorities_type == "literal" else priority
             if self.priorities_type == "literal":
                 if lowercase_task not in lowercase_tasks and lowercase_priority in lowercase_priority_levels:
                     self.to_do[task] = priority
@@ -228,7 +233,6 @@ class TaskManager:
             else:
                 response.append(f"[error]{',\n'.join(not_added_priority)}[error] have an invalid priority. Available priorities are:\n{"; ".join(self.priority_levels)}")
         TaskManager.console.print(" ".join(response))
-        return self._remove_rich_styling(" ".join(response))
 
     def remove_task(self,*tasks: str) -> None:
         """
@@ -253,9 +257,9 @@ class TaskManager:
                 not_found_tasks.append(task)
 
         if removed_tasks and not_found_tasks:
-            TaskManager.console.print(f"[success]{', '.join(removed_tasks)} removed successfully.[/success]\n[error]However, {', '.join(not_found_tasks)} not found in the to-do list.[/error]")
+            TaskManager.console.print(f"[success]{', '.join(removed_tasks)} [/success] [info]removed successfully.[/info]\n[error]However, {', '.join(not_found_tasks)} not found in the to-do list.[/error]")
         elif removed_tasks:
-            TaskManager.console.print(f"[success]{', '.join(removed_tasks)} removed successfully.[/success]")
+            TaskManager.console.print(f"[success]{', '.join(removed_tasks)} [/success] [info]removed successfully.[/info]")
         elif not_found_tasks:
             TaskManager.console.print(f"[error]{', '.join(not_found_tasks)} not found in the to-do list.[/error]")
 
@@ -291,7 +295,7 @@ class TaskManager:
                 absent_tasks.append(task)  
         response = []
         if done_tasks:
-            response.append(f"[success]{',\n'.join(done_tasks)}[success] [info]marked as done.\n[/info]")
+            response.append(f"[success]{',\n'.join(done_tasks)}[/success] [info]marked as done.\n[/info]")
         if already_done_tasks:
             response.append(f"[info]{',\n'.join(already_done_tasks)} already done.[/info]")
         if absent_tasks:
@@ -442,7 +446,7 @@ class TaskManager:
                 self.daily_completed_tasks.clear()
                 TaskManager.console.print("Both lists are cleared successfully.",style="success")
             else:
-                TaskManager.console.print("Both lists are empty.None cleared.",style="info")
+                TaskManager.console.print("Both lists are empty.None cleared.",style="info", highlight=False)
         else:
             TaskManager.console.print("Invalid option.",style="error")
 
