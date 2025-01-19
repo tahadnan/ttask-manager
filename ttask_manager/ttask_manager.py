@@ -225,7 +225,7 @@ class TaskManager:
                 response.append(f"[error]{',\n'.join(not_added)}[/error] [info]weren't added to the To-Do list.[/info]\n ")
         if not_added_existence:
             if len(not_added_existence) == 1:
-                response.append(f"[error]{not_added_existence[0]}[/error] [/info]is already in the To-Do list.[/info]\n")
+                response.append(f"[error]{not_added_existence[0]}[/error] [info]is already in the To-Do list.[/info]\n")
             else:
                 response.append(f"[error]{',\n'.join(not_added_existence)}[/error][info] are already in the To-Do list.[/info]\n")
 
