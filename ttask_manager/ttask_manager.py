@@ -104,14 +104,14 @@ class TaskManager:
         absolute_path = os.path.abspath(data_file_path)
         file_ext = os.path.splitext(absolute_path)[1]
 
-        if not os.path.exists(absolute_path):
+        if not os.path.exists(os.path.dirname(absolute_path)):
             TaskManager.console.print(f"{absolute_path} is invalid as a data file path to save to.",style="error")
             return
         if file_ext.lower() != ".json":
             TaskManager.console.print(f"{data_file_path} is invalid as a data file to save to, only \".json\" files allowed.", style="error")
             return
 
-        with open(data_file_path, 'w') as data_safe:
+        with open(absolute_path, 'w') as data_safe:
             json.dump(self.data, data_safe, indent=2)
         TaskManager.console.print(f"Data written successfully to \"{absolute_path}\" .",style="success")
     
